@@ -2,20 +2,26 @@ const express = require("express");
 const router = express.Router();
 const {
   createItem,
+
   getItems,
-  deleteItems,
-  updateItem,
+  deleteItem,
+  likeItem,
+  dislikeItem,
 } = require("../controllers/clothingItem");
 
 router.use(express.json());
 //Create
 router.post("/", createItem);
 
+//updateItem
+// router.patch("/:itemId", updateItem);
+
 //Read
 router.get("/", getItems);
-//Update
-router.put("/:itemId", updateItem);
-
-//Delete
-router.delete("/", deleteItems);
+//likeItem
+router.patch("/:itemId/likes", likeItem);
+//dislike Item
+router.delete("/:itemId/likes", dislikeItem);
+//del
+router.delete("/:itemId", deleteItem);
 module.exports = router;

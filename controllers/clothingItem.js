@@ -13,6 +13,7 @@ const createItem = (req, res) => {
         .send({ message: "Error from createItem", error: error.message });
     });
 };
+
 const getItems = (req, res) => {
   ClothingItem.find({})
     .then((items) => res.status(200).send({ data: items }))
@@ -21,26 +22,90 @@ const getItems = (req, res) => {
     });
 };
 
-const deleteItems = (req, res) => {
-  ClothingItem.deleteMany({})
-    .then((result) => res.status(200).send({ data: result }))
-    .catch(() => {
-      res
-        .status(ERROR_SERVER)
-        .send({ message: "Error occurred while deleting items" });
-    });
-};
-
-const updateItem = (req, res) => {
-  const { itemId } = req.params;
-  const { imageURL } = req.body;
-
-  ClothingItem.findByIdAndUpdate(itemId, { $set: { imageURL } }, { new: true })
+const deleteItem = (req, res) => {
+  ClothingItem.findByIdAndDelete(req.params.itemId)
     .orFail()
     .then((item) => res.status(200).send({ data: item }))
-    .catch(() => {
-      res.status(ERROR_SERVER).send({ message: "Error from updateItem" });
+    .catch((error) => {
+      if (error.name === "CastError") {
+        return res
+          .status(ERROR_BAD_REQUEST)
+          .send({ message: "Invalid item ID" });
+      }
+      if (error.name === "DocumentNotFoundError") {
+        return res.status(ERROR_NOT_FOUND).send({ message: "Item not found" });
+      }
+      console.error("Error from deleteItem:", error);
+      res
+        .status(ERROR_SERVER)
+        .send({ message: "Error occurred while deleting item" });
     });
 };
 
-module.exports = { createItem, getItems, deleteItems, updateItem };
+// const updateItem = (req, res) => {
+//   const { itemId } = req.params;
+//   const { imageURL } = req.body;
+
+//   ClothingItem.findByIdAndUpdate(itemId, { $set: { imageURL } }, { new: true })
+//     .orFail()
+//     .then((item) => res.status(200).send({ data: item }))
+//     .catch(() => {
+//       res.status(ERROR_SERVER).send({ message: "Error from updateItem" });
+//     });
+// };
+
+const likeItem = (req, res) => {
+  const { itemId } = req.params;
+  const userId = req.body.userId;
+
+  ClothingItem.findByIdAndUpdate(
+    itemId,
+    { $addToSet: { likes: userId } },
+    { new: true }
+  )
+    .then((item) => {
+      if (!item) {
+        return res.status(404).send({ message: "Item not found" });
+      }
+      res.status(200).send({ data: item });
+    })
+    .catch((error) => {
+      console.error("Error in likeItem:", error);
+      res
+        .status(ERROR_SERVER)
+        .send({ message: "Error from likeItem", error: error.message });
+    });
+};
+
+const dislikeItem = (req, res) => {
+  const { itemId } = req.params;
+  const userId = req.body.userId;
+
+  ClothingItem.findByIdAndUpdate(
+    itemId,
+    { $pull: { likes: userId } },
+    { new: true }
+  )
+    .orFail()
+    .then((item) => res.status(200).send({ data: item }))
+    .catch((error) => {
+      if (error.name === "CastError") {
+        return res
+          .status(ERROR_BAD_REQUEST)
+          .send({ message: "Invalid item ID" });
+      }
+      if (error.name === "DocumentNotFoundError") {
+        return res.status(ERROR_NOT_FOUND).send({ message: "Item not found" });
+      }
+      console.error("Error in dislikeItem:", error);
+      res.status(ERROR_SERVER).send({ message: "Error from dislikeItem" });
+    });
+};
+module.exports = {
+  createItem,
+  getItems,
+  deleteItem,
+
+  likeItem,
+  dislikeItem,
+};
