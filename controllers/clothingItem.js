@@ -1,12 +1,21 @@
 const ClothingItem = require("../models/clothingItem");
-const { ERROR_SERVER } = require("../utils/constants");
+const {
+  ERROR_SERVER,
+  ERROR_BAD_REQUEST,
+  ERROR_NOT_FOUND,
+} = require("../utils/constants");
 
 const createItem = (req, res) => {
-  const { name, weather, imageURL } = req.body;
+  const { name, weather, imageUrl } = req.body;
 
-  ClothingItem.create({ name, weather, imageURL })
+  ClothingItem.create({ name, weather, imageUrl, owner: req.user._id })
     .then((item) => res.send({ data: item }))
     .catch((error) => {
+      if (error.name === "ValidationError") {
+        return res
+          .status(ERROR_BAD_REQUEST)
+          .send({ message: "Invalid data passed" });
+      }
       console.error("Error from createItem:", error);
       res
         .status(ERROR_SERVER)
@@ -42,21 +51,9 @@ const deleteItem = (req, res) => {
     });
 };
 
-// const updateItem = (req, res) => {
-//   const { itemId } = req.params;
-//   const { imageURL } = req.body;
-
-//   ClothingItem.findByIdAndUpdate(itemId, { $set: { imageURL } }, { new: true })
-//     .orFail()
-//     .then((item) => res.status(200).send({ data: item }))
-//     .catch(() => {
-//       res.status(ERROR_SERVER).send({ message: "Error from updateItem" });
-//     });
-// };
-
 const likeItem = (req, res) => {
   const { itemId } = req.params;
-  const userId = req.body.userId;
+  const userId = req.user._id;
 
   ClothingItem.findByIdAndUpdate(
     itemId,
@@ -65,11 +62,16 @@ const likeItem = (req, res) => {
   )
     .then((item) => {
       if (!item) {
-        return res.status(404).send({ message: "Item not found" });
+        return res.status(ERROR_NOT_FOUND).send({ message: "Item not found" });
       }
       res.status(200).send({ data: item });
     })
     .catch((error) => {
+      if (error.name === "CastError") {
+        return res
+          .status(ERROR_BAD_REQUEST)
+          .send({ message: "Invalid item ID" });
+      }
       console.error("Error in likeItem:", error);
       res
         .status(ERROR_SERVER)
@@ -79,7 +81,7 @@ const likeItem = (req, res) => {
 
 const dislikeItem = (req, res) => {
   const { itemId } = req.params;
-  const userId = req.body.userId;
+  const userId = req.user._id;
 
   ClothingItem.findByIdAndUpdate(
     itemId,
@@ -101,11 +103,11 @@ const dislikeItem = (req, res) => {
       res.status(ERROR_SERVER).send({ message: "Error from dislikeItem" });
     });
 };
+
 module.exports = {
   createItem,
   getItems,
   deleteItem,
-
   likeItem,
   dislikeItem,
 };
