@@ -17,7 +17,7 @@ const createItem = (req, res) => {
           .send({ message: "Invalid data passed" });
       }
       console.error("Error from createItem:", error);
-      res
+      return res
         .status(ERROR_SERVER)
         .send({ message: "Error from createItem", error: error.message });
     });
@@ -45,7 +45,7 @@ const deleteItem = (req, res) => {
         return res.status(ERROR_NOT_FOUND).send({ message: "Item not found" });
       }
       console.error("Error from deleteItem:", error);
-      res
+      return res
         .status(ERROR_SERVER)
         .send({ message: "Error occurred while deleting item" });
     });
@@ -64,7 +64,7 @@ const likeItem = (req, res) => {
       if (!item) {
         return res.status(ERROR_NOT_FOUND).send({ message: "Item not found" });
       }
-      res.status(200).send({ data: item });
+      return res.status(200).send({ data: item });
     })
     .catch((error) => {
       if (error.name === "CastError") {
@@ -73,7 +73,7 @@ const likeItem = (req, res) => {
           .send({ message: "Invalid item ID" });
       }
       console.error("Error in likeItem:", error);
-      res
+      return res
         .status(ERROR_SERVER)
         .send({ message: "Error from likeItem", error: error.message });
     });
@@ -100,7 +100,9 @@ const dislikeItem = (req, res) => {
         return res.status(ERROR_NOT_FOUND).send({ message: "Item not found" });
       }
       console.error("Error in dislikeItem:", error);
-      res.status(ERROR_SERVER).send({ message: "Error from dislikeItem" });
+      return res
+        .status(ERROR_SERVER)
+        .send({ message: "Error from dislikeItem" });
     });
 };
 
