@@ -10,7 +10,7 @@ const {
   dislikeItem,
 } = require("../controllers/clothingItem");
 
-router.use(express.json());
+// router.use(express.json());
 
 router.get("/", getItems);
 router.use(auth);

@@ -4,6 +4,7 @@ const {
   ERROR_SERVER,
   ERROR_BAD_REQUEST,
   ERROR_NOT_FOUND,
+  HTTP_STATUS_FORBIDDEN,
 } = require("../utils/constants");
 
 const createItem = (req, res) => {
@@ -44,9 +45,10 @@ const deleteItem = (req, res) => {
       }
 
       if (item.owner.toString() !== userId) {
-        return res
-          .status(403)
-          .send({ message: "Forbidden: You can't delete this item" });
+        return res.status(HTTP_STATUS_FORBIDDEN).json({ message: "Forbidden" });
+
+        // .status(403)
+        // .send({ message: "Forbidden: You can't delete this item" });
       }
 
       return ClothingItem.findByIdAndDelete(itemId).then(() =>
