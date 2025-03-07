@@ -1,4 +1,5 @@
 const ClothingItem = require("../models/clothingItem");
+
 const {
   ERROR_SERVER,
   ERROR_BAD_REQUEST,
@@ -32,16 +33,34 @@ const getItems = (req, res) => {
 };
 
 const deleteItem = (req, res) => {
-  ClothingItem.findByIdAndDelete(req.params.itemId)
-    .orFail()
-    .then((item) => res.status(200).send({ data: item }))
+  const { itemId } = req.params;
+  const userId = req.user._id;
+
+  ClothingItem.findById(itemId)
+    .orFail(() => new Error("DocumentNotFound"))
+    .then((item) => {
+      if (!item) {
+        return res.status(ERROR_NOT_FOUND).send({ message: "Item not found" });
+      }
+
+      if (item.owner.toString() !== userId) {
+        return res
+          .status(403)
+          .send({ message: "Forbidden: You can't delete this item" });
+      }
+
+      return ClothingItem.findByIdAndDelete(itemId).then(() =>
+        res.status(200).send({ message: "Item deleted successfully" })
+      );
+    })
     .catch((error) => {
+      console.log(error);
       if (error.name === "CastError") {
         return res
           .status(ERROR_BAD_REQUEST)
           .send({ message: "Invalid item ID" });
       }
-      if (error.name === "DocumentNotFoundError") {
+      if (error.message === "DocumentNotFound") {
         return res.status(ERROR_NOT_FOUND).send({ message: "Item not found" });
       }
       console.error("Error from deleteItem:", error);

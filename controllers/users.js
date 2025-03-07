@@ -1,73 +1,152 @@
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const User = require("../models/user");
+
 const {
   ERROR_SERVER,
   ERROR_BAD_REQUEST,
   ERROR_NOT_FOUND,
 } = require("../utils/constants");
 
-const getAllUsers = (req, res) => {
-  User.find({})
-    .then((users) => res.status(200).send({ data: users }))
-    .catch(() => {
-      res.status(ERROR_SERVER).send({ message: "Error from getUsersData" });
+const { JWT_SECRET } = require("../utils/config");
+
+const login = (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res
+      .status(ERROR_BAD_REQUEST)
+      .send({ message: "Email and password are required" });
+  }
+
+  User.findUserByCredentials({ email, password })
+    .then((user) => {
+      if (!user) {
+        return res.status(ERROR_NOT_FOUND).send({ message: "User not found" });
+      }
+
+      return bcrypt.compare(password, user.password).then((isMatch) => {
+        if (!isMatch) {
+          return res
+            .status(ERROR_BAD_REQUEST)
+            .send({ message: "Invalid credentials" });
+        }
+        console.log("JWT Secret:", JWT_SECRET);
+        const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+          expiresIn: "7d",
+        });
+
+        return res.status(200).send({ message: "Login successful", token });
+      });
+    })
+    .catch((error) => {
+      if (error.message === "Incorrect email or password") {
+        return res
+          .status(ERROR_BAD_REQUEST)
+          .send({ message: "Invalid email or password" });
+      }
+      console.error(error);
+      return res.status(ERROR_SERVER).send({ message: "Error during login" });
     });
 };
 
-const getUserById = (req, res) => {
-  User.findOne({ _id: req.params.userId })
-    .orFail()
+const getAllUsers = (req, res) => {
+  User.find({})
     .then((users) => res.status(200).send({ data: users }))
     .catch((error) => {
+      console.error(error);
+      return res.status(ERROR_SERVER).send({ message: "Error fetching users" });
+    });
+};
+
+const getCurrentUser = (req, res) => {
+  User.findById(req.user._id)
+    .then((user) => {
+      if (!user) {
+        return res.status(ERROR_NOT_FOUND).send({ message: "User not found" });
+      }
+      return res.status(200).send({ data: user });
+    })
+    .catch((error) => {
+      console.log(error);
       if (error.name === "CastError") {
         return res.status(ERROR_BAD_REQUEST).send({ message: "Invalid ID" });
       }
-      if (error.name === "DocumentNotFoundError") {
-        return res.status(ERROR_NOT_FOUND).send({ message: "user not found" });
+      console.error(error);
+      return res.status(ERROR_SERVER).send({ message: "Error fetching user" });
+    });
+};
+const updateUserProfile = (req, res) => {
+  const { name, avatar } = req.body;
+
+  User.findByIdAndUpdate(
+    req.user._id,
+    { name, avatar },
+    { new: true, runValidators: true }
+  )
+    .then((updateUser) => {
+      if (!updateUser) {
+        return res.status(ERROR_NOT_FOUND).send({ message: "User not found" });
       }
+      return res.status(200).send({ data: updateUser });
+    })
+    .catch((error) => {
       console.log(error);
-      res.status(ERROR_SERVER).send({ message: "Error from getUsersData" });
+      return res.status(ERROR_SERVER).send({ message: "Error updating user" });
     });
 };
 
 const createUser = (req, res) => {
   console.log("Received request to create user:", req.body);
 
-  const { name, avatar } = req.body;
+  const { name, email, password, avatar } = req.body;
 
-  if (!name || !avatar) {
-    console.log("Missing required fields: name or avatar");
+  if (!name || !email || !password) {
+    console.log("Missing required fields: name, email, or password");
     return res
       .status(ERROR_BAD_REQUEST)
-      .json({ message: "Name and avatar are required" });
+      .json({ message: "Name, email, and password are required" });
   }
 
-  const userData = {
-    name,
+  bcrypt.hash(password, 10).then((hashedPassword) => {
+    const userData = {
+      name,
+      email,
+      password: hashedPassword,
+      avatar: avatar || "https://example.com/default-avatar.jpg",
+    };
 
-    avatar: avatar || "https://example.com/default-avatar.jpg",
-    owner: req.user?._id,
-  };
+    return User.create(userData)
+      .then((user) => {
+        console.log("User created successfully:", user);
+        const { name, email, avatar } = user;
+        return res.status(201).send({ name, email, avatar });
+      })
+      .catch((error) => {
+        console.error("Error from createUser:", error);
 
-  return User.create(userData)
+        if (error.code === 11000) {
+          console.log("Duplicate email detected");
+          return res.status(409).send({ message: "Email already in use" });
+        }
 
-    .then((user) => {
-      console.log("User created successfully:", user);
-      res.send({ data: user });
-    })
-    .catch((error) => {
-      console.error("Error from createUser:", error);
+        if (error.name === "ValidationError") {
+          return res
+            .status(ERROR_BAD_REQUEST)
+            .send({ message: "Invalid data passed" });
+        }
 
-      if (error.name === "ValidationError") {
-        console.log("Validation error occurred");
         return res
-          .status(ERROR_BAD_REQUEST)
-          .send({ message: "Invalid data passed" });
-      }
-
-      return res
-        .status(ERROR_SERVER)
-        .send({ message: "Error from createUser", error: error.message });
-    });
+          .status(ERROR_SERVER)
+          .send({ message: "Error from createUser", error: error.message });
+      });
+  });
 };
 
-module.exports = { getAllUsers, getUserById, createUser };
+module.exports = {
+  getAllUsers,
+  getCurrentUser,
+  updateUserProfile,
+  createUser,
+  login,
+};

@@ -1,4 +1,5 @@
 const express = require("express");
+const auth = require("../middlewares/auth");
 
 const router = express.Router();
 const {
@@ -11,10 +12,9 @@ const {
 
 router.use(express.json());
 
-router.post("/", createItem);
-
 router.get("/", getItems);
-
+router.use(auth);
+router.post("/", createItem);
 router.put("/:itemId/likes", likeItem);
 
 router.delete("/:itemId/likes", dislikeItem);
