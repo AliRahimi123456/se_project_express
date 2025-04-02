@@ -45,6 +45,7 @@ const deleteItem = (req, res) => {
       }
 
       if (item.owner.toString() !== userId) {
+        console.log(item.owner, userId);
         return res.status(HTTP_STATUS_FORBIDDEN).json({ message: "Forbidden" });
 
         // .status(403)
