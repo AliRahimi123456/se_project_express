@@ -34,10 +34,10 @@ const getItems = (req, res) => {
 };
 
 const deleteItem = (req, res) => {
-  const { itemId } = req.params;
+  const { id } = req.params;
   const userId = req.user._id;
 
-  ClothingItem.findById(itemId)
+  ClothingItem.findById(id)
     .orFail(() => new Error("DocumentNotFound"))
     .then((item) => {
       if (!item) {
@@ -52,7 +52,7 @@ const deleteItem = (req, res) => {
         // .send({ message: "Forbidden: You can't delete this item" });
       }
 
-      return ClothingItem.findByIdAndDelete(itemId).then(() =>
+      return ClothingItem.findByIdAndDelete(id).then(() =>
         res.status(200).send({ message: "Item deleted successfully" })
       );
     })
