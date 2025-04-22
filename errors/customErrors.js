@@ -4,34 +4,77 @@ class BadRequestError extends Error {
     this.statusCode = 400;
   }
 }
-class UnauthorizedError extends Error {
-  constructor(message) {
-    super(message);
-    this.statusCode = 401;
-  }
-}
-class ForbidenError extends Error {
+module.exports = BadRequestError;
+
+class ForbiddenError extends Error {
   constructor(message) {
     super(message);
     this.statusCode = 403;
   }
 }
+module.exports = ForbiddenError;
+
 class NotFoundError extends Error {
   constructor(message) {
     super(message);
     this.statusCode = 404;
   }
 }
-class ConflictError extends Error {
+module.exports = NotFoundError;
+
+class UnauthorizedError extends Error {
   constructor(message) {
     super(message);
-    this.statusCode = 409;
+    this.statusCode = 401; // Status code for Unauthorized
   }
 }
-module.exports = {
-  BadRequestError,
-  UnauthorizedError,
-  ForbidenError,
-  NotFoundError,
-  ConflictError,
-};
+
+module.exports = UnauthorizedError;
+
+// class BadRequestError extends Error {
+//   constructor(message) {
+//     super(message);
+//     this.statusCode = 400;
+//   }
+// }
+// module.exports = BadRequestError;
+
+// // class UnauthorizedError extends Error {
+// //   constructor(message) {
+// //     super(message);
+// //     this.statusCode = 401;
+// //   }
+// // }
+// // module.exports = UnauthorizedError;
+
+// class ForbiddenError extends Error {
+//   constructor(message) {
+//     super(message);
+//     this.statusCode = 403;
+//   }
+// }
+// module.exports = ForbiddenError;
+
+// class NotFoundError extends Error {
+//   constructor(message) {
+//     super(message);
+//     this.statusCode = 404;
+//   }
+// }
+// module.exports = NotFoundError;
+
+// // class ConflictError extends Error {
+// //   constructor(message) {
+// //     super(message);
+// //     this.statusCode = 409;
+// //   }
+// // }
+// // module.exports = ConflictError;
+
+// // module.exports = {
+// //   BadRequestError,
+// //   UnauthorizedError,
+// //   ForbiddenError,
+// //   NotFoundError,
+// //   ConflictError,
+// // };

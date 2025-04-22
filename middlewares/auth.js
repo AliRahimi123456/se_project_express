@@ -1,15 +1,15 @@
 const jwt = require("jsonwebtoken");
 const { ERROR_UNAUTHORIZED } = require("../utils/constants");
 const { JWT_SECRET } = require("../utils/config");
+const UnauthorizedError = require("../errors/customErrors");
 
 const auth = (req, res, next) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith("Bearer")) {
-    return res
-      .status(ERROR_UNAUTHORIZED)
-      .send({ message: "Authorization required" });
+    throw new UnauthorizedError("Authorization required");
   }
+
   const token = authorization.replace("Bearer ", "");
   let payload;
 
@@ -17,13 +17,12 @@ const auth = (req, res, next) => {
     payload = jwt.verify(token, JWT_SECRET);
   } catch (err) {
     console.error("JWT verification failed:", err);
-    return res
-      .status(ERROR_UNAUTHORIZED)
-      .send({ message: "Invalid or expired token" });
+    throw new UnauthorizedError("Invalid or expired token");
   }
 
   req.user = payload;
   console.log("Authentication:", req.user);
   return next();
 };
+
 module.exports = auth;
