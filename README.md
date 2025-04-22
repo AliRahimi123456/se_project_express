@@ -55,3 +55,8 @@ Why Using MongoDB?
 Scalability and Flexibility: MongoDB handles large-scale applications with ease. The NoSQL structure allows for easy scaling and changes to data models without downtime.
 Document-Oriented: Since the data in WTWR (e.g., user profiles, weather data, outfit preferences) is somewhat flexible and may change over time, MongoDB’s document-based model is a good fit.
 Real-Time Data: MongoDB allows for high-speed reads and writes, making it ideal for applications where data is constantly changing or being updated, such as live weather data and user preferences.
+
+## Links
+
+https://www.wapplication.hardsoft.nu/
+https://wapplication.hardsoft.nu/
