@@ -1,4 +1,5 @@
 const express = require("express");
+const { celebrate, Joi } = require("celebrate");
 const auth = require("../middlewares/auth");
 
 const router = express.Router();
@@ -10,7 +11,6 @@ const {
   dislikeItem,
 } = require("../controllers/clothingItem");
 const { validateCardBody, validateId } = require("../middlewares/validadtion");
-const { celebrate, Joi } = require("celebrate");
 
 router.get("/", getItems);
 

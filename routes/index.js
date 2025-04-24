@@ -1,12 +1,11 @@
 const express = require("express");
-const router = express.Router();
+const { celebrate, Joi } = require("celebrate");
 const clothingItemRoutes = require("./clothingItem");
 const userRoutes = require("./users");
-const { celebrate, Joi } = require("celebrate");
 const auth = require("../middlewares/auth");
-const { ERROR_NOT_FOUND } = require("../utils/constants");
-
 const NotFoundError = require("../errors/customErrors");
+
+const router = express.Router();
 
 router.post(
   "/signin",
@@ -26,6 +25,7 @@ router.post(
       email: Joi.string().email().required(),
       password: Joi.string().min(6).required(),
       name: Joi.string().min(2).max(30).required(),
+      avatar: Joi.string().uri().required(),
     }),
   }),
   require("../controllers/users").createUser
