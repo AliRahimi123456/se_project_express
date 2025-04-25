@@ -3,7 +3,7 @@ const { celebrate, Joi } = require("celebrate");
 const clothingItemRoutes = require("./clothingItem");
 const userRoutes = require("./users");
 const auth = require("../middlewares/auth");
-const NotFoundError = require("../errors/customErrors");
+const NotFoundError = require("../errors/not-found-error");
 
 const router = express.Router();
 
